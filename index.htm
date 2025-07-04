@@ -11,7 +11,6 @@
       color: #eee;
       margin: 20px;
     }
-
     .card {
       max-width: 450px;
       margin: auto;
@@ -20,41 +19,25 @@
       padding: 24px;
       box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
     }
-
-    .icon {
-      text-align: center;
-      font-size: 2.5rem;
-      margin-bottom: 16px;
-    }
-
     h2 {
       text-align: center;
       font-size: 1.5rem;
       color: #ccc;
       margin-bottom: 20px;
     }
-
-    .input-group {
-      margin-bottom: 16px;
-    }
-
+    .input-group { margin-bottom: 16px; }
     label {
       color: #aaa;
       font-size: 0.95rem;
       display: block;
       margin-bottom: 4px;
     }
-
     .slider-group {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
-    input[type=range] {
-      flex: 1;
-    }
-
+    input[type=range] { flex: 1; }
     input[type=number] {
       width: 70px;
       padding: 6px;
@@ -63,7 +46,6 @@
       background: #222;
       color: #eee;
     }
-
     button {
       width: 100%;
       padding: 12px;
@@ -75,11 +57,7 @@
       cursor: pointer;
       margin-top: 12px;
     }
-
-    button:hover {
-      background: #0066cc;
-    }
-
+    button:hover { background: #0066cc; }
     #result {
       margin-top: 20px;
       padding: 14px;
@@ -87,35 +65,15 @@
       text-align: center;
       font-weight: 500;
     }
-
-    .hybrid-win {
-      background-color: #003300;
-      color: #b6ffb6;
-    }
-
-    .diesel-win {
-      background-color: #330000;
-      color: #ffb6b6;
-    }
-
-    .google-link {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .google-link a {
-      color: #0a7bff;
-      text-decoration: none;
-    }
-
-    .google-link a:hover {
-      text-decoration: underline;
-    }
+    .hybrid-win { background-color: #003300; color: #b6ffb6; }
+    .diesel-win { background-color: #330000; color: #ffb6b6; }
+    .google-link { text-align: center; margin-bottom: 20px; }
+    .google-link a { color: #0a7bff; text-decoration: none; }
+    .google-link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="icon">🚘</div>
     <h2>Fahrzeugvergleich</h2>
 
     <div class="input-group">
@@ -139,7 +97,7 @@
     </div>
 
     <div class="input-group">
-      <label>Hybrid-Verbrauch leer (l/100 km):</label>
+      <label>Hybrid-Verbrauch leer (l/100 km):</label>
       <div class="slider-group">
         <input type="range" min="3" max="10" step="0.1" value="5.5" id="hybconsSlider" oninput="hybconsInput.value=this.value" />
         <input type="number" id="hybconsInput" value="5.5" oninput="hybconsSlider.value=this.value" />
@@ -147,7 +105,7 @@
     </div>
 
     <div class="input-group">
-      <label>Benzinpreis (€/l):</label>
+      <label>Benzinpreis (€/l): <span id="benzinQuelle" style="font-size: 0.8rem; color: #888;"></span></label>
       <div class="slider-group">
         <input type="range" min="1.0" max="2.5" step="0.01" value="1.75" id="gaspriceSlider" oninput="gaspriceInput.value=this.value" />
         <input type="number" id="gaspriceInput" value="1.75" step="0.01" oninput="gaspriceSlider.value=this.value" />
@@ -155,7 +113,7 @@
     </div>
 
     <div class="input-group">
-      <label>Dieselverbrauch (l/100 km):</label>
+      <label>Dieselverbrauch (l/100 km):</label>
       <div class="slider-group">
         <input type="range" min="3" max="7" step="0.1" value="4.0" id="dieselconsSlider" oninput="dieselconsInput.value=this.value" />
         <input type="number" id="dieselconsInput" value="4.0" oninput="dieselconsSlider.value=this.value" />
@@ -163,7 +121,7 @@
     </div>
 
     <div class="input-group">
-      <label>Dieselpreis (€/l):</label>
+      <label>Dieselpreis (€/l): <span id="dieselQuelle" style="font-size: 0.8rem; color: #888;"></span></label>
       <div class="slider-group">
         <input type="range" min="1.0" max="2.5" step="0.01" value="1.62" id="dieselpriceSlider" oninput="dieselpriceInput.value=this.value" />
         <input type="number" id="dieselpriceInput" value="1.62" step="0.01" oninput="dieselpriceSlider.value=this.value" />
@@ -175,6 +133,32 @@
   </div>
 
   <script>
+    const API_KEY = 'af8265a1-213b-d038-1a9c-de9df331c0a1';
+    const LAT = 52.4517, LNG = 7.1065;
+
+    window.addEventListener('load', () => {
+      fetch(`https://creativecommons.tankerkoenig.de/json/list.php?lat=${LAT}&lng=${LNG}&rad=5&sort=dist&type=all&apikey=${API_KEY}`)
+        .then(res => res.json())
+        .then(data => {
+          const station = data.stations?.[0];
+          if (station) {
+            if (station.e10) {
+              document.getElementById("gaspriceInput").value = station.e10.toFixed(2);
+              document.getElementById("gaspriceSlider").value = station.e10.toFixed(2);
+              const updated = new Date(station.lastChange).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+              document.getElementById("benzinQuelle").textContent = `(Quelle: ${station.brand} ${station.street}, Stand: ${updated} Uhr)`;
+            }
+            if (station.diesel) {
+              document.getElementById("dieselpriceInput").value = station.diesel.toFixed(2);
+              document.getElementById("dieselpriceSlider").value = station.diesel.toFixed(2);
+              const updatedD = new Date(station.lastChange).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+              document.getElementById("dieselQuelle").textContent = `(Quelle: ${station.brand} ${station.street}, Stand: ${updatedD} Uhr)`;
+            }
+          }
+        })
+        .catch(error => console.error("Tankerkönig API-Fehler:", error));
+    });
+
     function calc() {
       const d = +distInput.value;
       const e = +elkmInput.value;
